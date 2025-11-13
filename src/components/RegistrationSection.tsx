@@ -2,6 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Check, Clock, AlertCircle, Lock } from "lucide-react";
 import SuccessModal from "@/components/SuccessModal";
 
@@ -9,10 +16,14 @@ const RegistrationSection = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
-    email: ""
+    email: "",
+    phone: "",
+    gender: "",
+    age: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Validação de email em tempo real
@@ -31,15 +42,55 @@ const RegistrationSection = () => {
     validateEmail(email);
   };
 
+  // Máscara e validação de telefone
+  const formatPhone = (value: string) => {
+    // Remove tudo que não é dígito
+    const numbers = value.replace(/\D/g, '').slice(0, 11);
+    
+    // Aplica máscara conforme o tamanho
+    if (numbers.length <= 10) {
+      // Telefone fixo: (XX) XXXX-XXXX
+      return numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, (_, p1, p2, p3) => {
+        if (p3) return `(${p1}) ${p2}-${p3}`;
+        if (p2) return `(${p1}) ${p2}`;
+        if (p1) return `(${p1}`;
+        return '';
+      });
+    } else {
+      // Celular: (XX) XXXXX-XXXX
+      return numbers.replace(/(\d{2})(\d{5})(\d{0,4})/, (_, p1, p2, p3) => {
+        if (p3) return `(${p1}) ${p2}-${p3}`;
+        if (p2) return `(${p1}) ${p2}`;
+        if (p1) return `(${p1}`;
+        return '';
+      });
+    }
+  };
+
+  const validatePhone = (phone: string) => {
+    const numbers = phone.replace(/\D/g, '');
+    if (phone && numbers.length < 10) {
+      setPhoneError("Por favor, insira um telefone válido");
+    } else {
+      setPhoneError("");
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setFormData({...formData, phone: formatted});
+    validatePhone(formatted);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
-    if (!formData.name || !formData.email) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.gender || !formData.age) {
       return;
     }
 
-    if (emailError) {
+    if (emailError || phoneError) {
       return;
     }
 
@@ -53,7 +104,7 @@ const RegistrationSection = () => {
     setShowSuccessModal(true);
     
     // Reset form
-    setFormData({ name: "", email: "" });
+    setFormData({ name: "", email: "", phone: "", gender: "", age: "" });
     setIsSubmitting(false);
   };
 
@@ -172,13 +223,76 @@ const RegistrationSection = () => {
                       <p className="text-destructive text-sm mt-1">{emailError}</p>
                     )}
                   </div>
+
+                  <div>
+                    <label htmlFor="phone" className="block text-sm md:text-base font-medium text-foreground mb-2">
+                      Telefone: <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="(11) 98765-4321"
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      className={`h-12 ${phoneError ? 'border-destructive' : ''}`}
+                      maxLength={15}
+                      required
+                    />
+                    {phoneError && (
+                      <p className="text-destructive text-sm mt-1">{phoneError}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="gender" className="block text-sm md:text-base font-medium text-foreground mb-2">
+                      Gênero:
+                    </label>
+                    <Select
+                      value={formData.gender}
+                      onValueChange={(value) => setFormData({...formData, gender: value})}
+                      required
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Selecione seu gênero" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="masculino">Masculino</SelectItem>
+                        <SelectItem value="feminino">Feminino</SelectItem>
+                        <SelectItem value="outro">Outro</SelectItem>
+                        <SelectItem value="prefiro-nao-informar">Prefiro não informar</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="age" className="block text-sm md:text-base font-medium text-foreground mb-2">
+                      Idade:
+                    </label>
+                    <Select
+                      value={formData.age}
+                      onValueChange={(value) => setFormData({...formData, age: value})}
+                      required
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Selecione sua faixa etária" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="18-25">18-25 anos</SelectItem>
+                        <SelectItem value="26-35">26-35 anos</SelectItem>
+                        <SelectItem value="36-45">36-45 anos</SelectItem>
+                        <SelectItem value="46-55">46-55 anos</SelectItem>
+                        <SelectItem value="56-65">56-65 anos</SelectItem>
+                        <SelectItem value="65+">65+ anos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <Button 
                   type="submit" 
                   size="lg"
                   className="w-full bg-gradient-to-r from-[#ff8c00] to-[#e07b00] hover:from-orange-600 hover:to-orange-700 text-white font-bold text-sm md:text-base lg:text-lg px-6 py-6 rounded-xl shadow-lg hover:shadow-orange-500/50 transition-all mb-6 min-h-[52px]"
-                  disabled={isSubmitting || !!emailError}
+                  disabled={isSubmitting || !!emailError || !!phoneError}
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
