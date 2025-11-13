@@ -1,17 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, Clock, AlertCircle, Lock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import SuccessModal from "@/components/SuccessModal";
 
 const RegistrationSection = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const { toast } = useToast();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Validação de email em tempo real
   const validateEmail = (email: string) => {
@@ -34,11 +36,6 @@ const RegistrationSection = () => {
     
     // Validate form
     if (!formData.name || !formData.email) {
-      toast({
-        title: "Preencha todos os campos",
-        description: "Por favor, complete todas as informações para reservar sua vaga.",
-        variant: "destructive"
-      });
       return;
     }
 
@@ -49,18 +46,20 @@ const RegistrationSection = () => {
     // Loading state
     setIsSubmitting(true);
 
-    // Simulate API call
+    // Simulate API call (aqui você faria a integração real)
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Success message
-    toast({
-      title: "Vaga reservada com sucesso! 🎉",
-      description: "Você receberá um email de confirmação em instantes.",
-    });
-
+    // Show success modal
+    setShowSuccessModal(true);
+    
     // Reset form
     setFormData({ name: "", email: "" });
     setIsSubmitting(false);
+  };
+
+  const handleRedirect = () => {
+    setShowSuccessModal(false);
+    navigate('/obrigado');
   };
 
   const benefits = [
@@ -77,13 +76,21 @@ const RegistrationSection = () => {
   ];
 
   return (
-    <section 
-      id="registration-form"
-      className="py-16 md:py-24 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden"
-    >
-      {/* Premium Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent"></div>
-      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]"></div>
+    <>
+      {/* Success Modal */}
+      <SuccessModal 
+        open={showSuccessModal}
+        onOpenChange={setShowSuccessModal}
+        onRedirect={handleRedirect}
+      />
+
+      <section 
+        id="registration-form"
+        className="py-16 md:py-24 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden"
+      >
+        {/* Premium Background Effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]"></div>
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -201,7 +208,8 @@ const RegistrationSection = () => {
           </div>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 };
 
